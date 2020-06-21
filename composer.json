@@ -1,5 +1,5 @@
 {
-    "name": "talav/user",
+    "name": "talav/media",
     "description": "Plan and plan feature functionality for SaaS applications",
     "keywords": ["symfony", "bundle", "subscription", "php"],
     "type": "library",
