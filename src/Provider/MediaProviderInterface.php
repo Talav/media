@@ -27,4 +27,6 @@ interface MediaProviderInterface
     public function postRemove(MediaInterface $media): void;
 
     public function postPersist(MediaInterface $media): void;
+
+    public function getMediaContent(MediaInterface $media): string;
 }

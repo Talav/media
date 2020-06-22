@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Talav\Component\Media\Model;
+namespace Talav\Component\Media\Manager;
 
 use Talav\Component\Resource\Manager\ResourceManager;
 use Talav\Component\Resource\Model\ResourceInterface;

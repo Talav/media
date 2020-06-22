@@ -10,18 +10,6 @@ use Talav\Component\Resource\Model\ResourceInterface;
 
 interface MediaInterface extends ResourceInterface
 {
-    public const STATUS_OK = 1;
-
-    public const STATUS_SENDING = 2;
-
-    public const STATUS_PENDING = 3;
-
-    public const STATUS_ERROR = 4;
-
-    public const STATUS_ENCODING = 5;
-
-    public const MISSING_BINARY_REFERENCE = 'missing_binary_content';
-
     public function setFile(File $file): void;
 
     public function getFile(): ?UploadedFile;
@@ -47,10 +35,6 @@ interface MediaInterface extends ResourceInterface
     public function getProviderName(): ?string;
 
     public function setProviderName(?string $providerName): void;
-
-    public function getProviderStatus(): ?int;
-
-    public function setProviderStatus(?int $providerStatus): void;
 
     public function getProviderReference(): ?string;
 

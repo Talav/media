@@ -61,9 +61,6 @@ class FileProvider implements MediaProviderInterface
     public function prePersist(MediaInterface $media): void
     {
         // validate media file
-        if (null === $media->getFile()) {
-            return;
-        }
         $this->validateMedia($media);
     }
 
@@ -73,9 +70,6 @@ class FileProvider implements MediaProviderInterface
     public function preUpdate(MediaInterface $media): void
     {
         // validate media file
-        if (null === $media->getFile()) {
-            return;
-        }
         $this->validateMedia($media);
     }
 
@@ -211,6 +205,19 @@ class FileProvider implements MediaProviderInterface
      */
     protected function validateMedia(MediaInterface $media): void
     {
+        if (empty($media->getContext())) {
+            throw new InvalidMediaException('Media should have context defined');
+        }
+        if (empty($media->getProviderName())) {
+            throw new InvalidMediaException('Media should have provider defined');
+        }
+        if (empty($media->getName())) {
+            throw new InvalidMediaException('Media should have name defined');
+        }
+        // all other checks only applicable if a new file is uploaded
+        if (null === $media->getFile()) {
+            return;
+        }
         if (!$this->constrains->isValidExtension($media->getFileExtension())) {
             throw new InvalidMediaException('Invalid file extension');
         }

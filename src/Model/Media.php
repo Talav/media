@@ -26,9 +26,6 @@ class Media implements MediaInterface
     /** @var string|null */
     protected $providerName;
 
-    /** @var int|null */
-    protected $providerStatus;
-
     /** @var string|null */
     protected $providerReference;
 
@@ -72,6 +69,7 @@ class Media implements MediaInterface
         $this->providerReference = null;
         $this->fileName = $file->getClientOriginalName();
         $this->ensureProviderReference();
+        $this->fixName();
     }
 
     public function getFile(): ?UploadedFile
@@ -137,16 +135,6 @@ class Media implements MediaInterface
         $this->providerName = $providerName;
     }
 
-    public function getProviderStatus(): ?int
-    {
-        return $this->providerStatus;
-    }
-
-    public function setProviderStatus(?int $providerStatus): void
-    {
-        $this->providerStatus = $providerStatus;
-    }
-
     public function getProviderReference(): ?string
     {
         return $this->providerReference;
@@ -210,5 +198,15 @@ class Media implements MediaInterface
     protected function generateReferenceName(): string
     {
         return sha1($this->getName() . uniqid() . random_int(11111, 99999));
+    }
+
+    /**
+     * Fixes media name if it's not provided
+     */
+    protected function fixName(): void
+    {
+        if (!is_null($this->getFile()) && is_null($this->name)) {
+            $this->name = $this->getFile()->getClientOriginalName();
+        }
     }
 }
