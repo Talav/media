@@ -15,6 +15,7 @@
         "league/flysystem": "^1.0",
         "league/glide": "^1.5",
         "symfony/http-foundation": "^5.1",
+        "symfony/validator": "^5.1",
         "symfony/mime": "^5.1",
         "talav/resource": "@dev",
         "league/flysystem-memory": "^1.0"
