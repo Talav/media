@@ -205,7 +205,7 @@ class Media implements MediaInterface
      */
     protected function fixName(): void
     {
-        if (!is_null($this->getFile()) && is_null($this->name)) {
+        if (null !== $this->getFile() && null === $this->name) {
             $this->name = $this->getFile()->getClientOriginalName();
         }
     }

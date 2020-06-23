@@ -29,4 +29,6 @@ interface MediaProviderInterface
     public function postPersist(MediaInterface $media): void;
 
     public function getMediaContent(MediaInterface $media): string;
+
+    public function getFileFieldConstraints(): array;
 }

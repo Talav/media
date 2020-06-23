@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Talav\Component\Media\Provider;
 
 use League\Flysystem\FilesystemInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Validator\Constraints as Constraint;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use Talav\Component\Media\Cdn\CdnInterface;
 use Talav\Component\Media\Exception\InvalidMediaException;
 use Talav\Component\Media\Generator\GeneratorInterface;
@@ -24,7 +27,7 @@ class FileProvider implements MediaProviderInterface
     /** @var GeneratorInterface */
     protected $generator;
 
-    /** @var Constrains */
+    /** @var Constraints */
     protected $constrains;
 
     /** @var MediaInterface[] */
@@ -35,14 +38,14 @@ class FileProvider implements MediaProviderInterface
         FilesystemInterface $filesystem,
         CdnInterface $cdn,
         GeneratorInterface $generator,
-        ?Constrains $constrains = null
+        ?Constraints $constrains = null
     ) {
         $this->name = $name;
         $this->filesystem = $filesystem;
         $this->cdn = $cdn;
         $this->generator = $generator;
         if (null === $constrains) {
-            $constrains = new Constrains([], []);
+            $constrains = new Constraints([], []);
         }
         $this->constrains = $constrains;
     }
@@ -177,6 +180,34 @@ class FileProvider implements MediaProviderInterface
     public function getMediaContent(MediaInterface $media): string
     {
         return $this->getFilesystem()->read($this->getFilesystemReference($media));
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getFileFieldConstraints(): array
+    {
+        return [
+            new Constraint\File($this->constrains->getFileConstraints()),
+            new Constraint\Callback([$this, 'validateExtension']),
+        ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function validateExtension($object, ExecutionContextInterface $context)
+    {
+        if ($object instanceof UploadedFile) {
+            if (!$this->constrains->isValidExtension($object->getClientOriginalExtension())) {
+                $context->addViolation(
+                    sprintf(
+                        'It\'s not allowed to upload a file with extension "%s"',
+                        $object->getClientOriginalExtension()
+                    )
+                );
+            }
+        }
     }
 
     /**
