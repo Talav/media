@@ -31,4 +31,6 @@ interface MediaProviderInterface
     public function getMediaContent(MediaInterface $media): string;
 
     public function getFileFieldConstraints(): array;
+
+    public function getFilesystemReference(MediaInterface $media): string;
 }

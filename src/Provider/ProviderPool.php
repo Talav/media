@@ -17,11 +17,6 @@ class ProviderPool
     /** @var array */
     protected $contexts = [];
 
-    /**
-     * @param string $name
-     *
-     * @throws \RuntimeException
-     */
     public function getProvider($name): MediaProviderInterface
     {
         if (!$name) {
@@ -64,9 +59,9 @@ class ProviderPool
     /**
      * @param string $name
      *
-     * @return array|null
+     * @return array
      */
-    public function getContext($name)
+    public function getContext($name): array
     {
         if (!$this->hasContext($name)) {
             throw new \RuntimeException(sprintf('Context "%s" does not exists'));
@@ -76,9 +71,9 @@ class ProviderPool
     }
 
     /**
-     * @return array
+     * @return array|string[]
      */
-    public function getProviderList()
+    public function getProviderList(): array
     {
         $choices = [];
         foreach (array_keys($this->providers) as $name) {
@@ -91,9 +86,9 @@ class ProviderPool
     /**
      * Returns the context list.
      *
-     * @return array
+     * @return array|array[]
      */
-    public function getContexts()
+    public function getContexts(): array
     {
         return $this->contexts;
     }
