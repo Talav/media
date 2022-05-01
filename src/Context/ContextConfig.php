@@ -7,23 +7,22 @@ namespace Talav\Component\Media\Context;
 use Talav\Component\Media\Provider\MediaProviderInterface;
 
 /**
- * Configuration for each context
+ * Configuration for each context.
  */
 class ContextConfig
 {
-    /** @var string */
-    protected $name;
+    protected string $name;
 
-    /** @var MediaProviderInterface */
-    protected $provider = [];
+    /** @var iterable|MediaProviderInterface[] */
+    protected iterable $providers;
 
-    /** @var array|string[] */
-    protected $formats = [];
+    /** @var iterable|string[] */
+    protected iterable $formats = [];
 
-    public function __construct(string $name, MediaProviderInterface $provider, array $formats = [])
+    public function __construct(string $name, iterable $providers, iterable $formats = [])
     {
         $this->name = $name;
-        $this->provider = $provider;
+        $this->providers = $providers;
         $this->formats = $formats;
     }
 
@@ -32,12 +31,14 @@ class ContextConfig
         return $this->name;
     }
 
-    public function getProvider(): MediaProviderInterface
+    /** @return MediaProviderInterface[]  */
+    public function getProviders(): iterable
     {
-        return $this->provider;
+        return $this->providers;
     }
 
-    public function getFormats(): array
+    /** @return string[]  */
+    public function getFormats(): iterable
     {
         return $this->formats;
     }

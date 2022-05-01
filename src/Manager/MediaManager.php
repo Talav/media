@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Talav\Component\Media\Manager;
 
+use Talav\Component\Media\Model\MediaInterface;
 use Talav\Component\Resource\Manager\ResourceManager;
 use Talav\Component\Resource\Model\ResourceInterface;
 use Webmozart\Assert\Assert;

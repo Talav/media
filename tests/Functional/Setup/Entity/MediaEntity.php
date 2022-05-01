@@ -3,13 +3,13 @@
 namespace Talav\Component\Media\Tests\Functional\Setup\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Talav\Component\Media\Model\FileInfo;
 use Talav\Component\Media\Model\Media;
-use Talav\Component\Resource\Model\ResourceInterface;
 
 /**
  * Doctrine media entity that is used for testing.
  *
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="Talav\Component\Resource\Repository\ResourceRepository")
  * @ORM\Table(name="test_media")
  */
 class MediaEntity extends Media
@@ -17,7 +17,6 @@ class MediaEntity extends Media
     /**
      * A unique ID.
      *
-     * @var integer|null
      * @ORM\Id
      * @ORM\Column(type="integer", name="id")
      * @ORM\GeneratedValue
@@ -25,76 +24,42 @@ class MediaEntity extends Media
     public $id = null;
 
     /**
-     * @var string|null
      * @ORM\Column(type="string", name="name", nullable=true)
      */
-    public $name;
+    public ?string $name = null;
 
     /**
-     * @var string
      * @ORM\Column(type="string", name="description", nullable=true)
      */
-    protected $description;
+    protected ?string $description = null;
 
     /**
-     * @var string
      * @ORM\Column(type="string", name="context", nullable=true)
      */
-    protected $context;
+    protected ?string $context = null;
 
     /**
-     * @var string
      * @ORM\Column(type="string", name="provider_name", nullable=true)
      */
-    protected $providerName;
+    protected ?string $providerName = null;
 
     /**
-     * @var int
-     * @ORM\Column(type="integer", name="provider_status", nullable=true)
-     */
-    protected $providerStatus;
-
-    /**
-     * @var string
      * @ORM\Column(type="string", name="provider_reference", nullable=true)
      */
-    protected $providerReference;
+    protected ?string $providerReference = null;
 
     /**
-     * @var int
-     * @ORM\Column(type="integer", name="size", nullable=true)
+     * @ORM\Column(type="json", name="thumbs_info", nullable=false)
      */
-    protected $size;
+    protected ?array $thumbsInfo = [];
 
     /**
-     * Mime type of the new file
-     *
-     * @var string
-     * @ORM\Column(type="string", name="mime_type", nullable=true)
+     * @ORM\Column(type="object", name="file_info", nullable=false)
      */
-    protected $mimeType;
+    protected ?FileInfo $fileInfo = null;
 
-    /**
-     * File extension
-     *
-     * @var string
-     * @ORM\Column(type="string", name="file_extension", nullable=true)
-     */
-    protected $fileExtension;
-
-    /**
-     * @return int|null
-     */
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    /**
-     * @param int|null $id
-     */
-    public function setId(?int $id): void
-    {
-        $this->id = $id;
     }
 }

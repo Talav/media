@@ -6,54 +6,20 @@ namespace Talav\Component\Media\Cdn;
 
 class Server implements CdnInterface
 {
-    /** @var string */
-    protected $path;
+    protected string $path;
 
-    /**
-     * @param string $path
-     */
-    public function __construct($path)
+    public function __construct(string $path)
     {
         $this->path = $path;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getPath($relativePath, $isFlushable)
+    public function getPath(string $relativePath): string
     {
         return sprintf('%s/%s', rtrim($this->path, '/'), ltrim($relativePath, '/'));
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function flushByString($string)
+    public function flush(string $string): int
     {
-        // nothing to do
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function flush($string)
-    {
-        // nothing to do
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function flushPaths(array $paths)
-    {
-        // nothing to do
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getFlushStatus($identifier)
-    {
-        // nothing to do
+        return CdnInterface::STATUS_OK;
     }
 }

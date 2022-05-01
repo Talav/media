@@ -1,2 +1,0 @@
-imports:
-  - { resource: 'vendor/talav/coding-standard/easy-coding-standard.yml' }

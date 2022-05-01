@@ -4,59 +4,56 @@ declare(strict_types=1);
 
 namespace Talav\Component\Media\Provider;
 
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Validator\Constraints as Constraint;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+
 class Constraints
 {
-    /** @var array|string[] */
-    protected $extensions = [];
+    /** @var string[] */
+    protected iterable $extensions = [];
 
-    /** @var array|string[] */
-    protected $fileConstraints = [];
+    /** @var string[] */
+    protected iterable $fileConstraints = [];
 
-    /** @var array|string[] */
-    protected $imageConstraints = [];
+    /** @var string[] */
+    protected iterable $imageConstraints = [];
 
-    public function __construct($extensions, $fileConstraints, $imageConstraints)
+    public function __construct(iterable $extensions, iterable $fileConstraints = [], iterable $imageConstraints = [])
     {
         $this->extensions = $extensions;
         $this->fileConstraints = $fileConstraints;
         $this->imageConstraints = $imageConstraints;
     }
 
-    /**
-     * @return array|string[]
-     */
-    public function getExtensions(): array
+    public function getFieldConstraints(): array
     {
-        return $this->extensions;
-    }
+        $constraints = [
+            new Constraint\Callback(
+                function ($object, ExecutionContextInterface $context) {
+                    if ($object instanceof UploadedFile) {
+                        if (!$this->isValidExtension($object->getClientOriginalExtension())) {
+                            $context->addViolation(
+                                sprintf(
+                                    'It\'s not allowed to upload a file with extension "%s"',
+                                    $object->getClientOriginalExtension()
+                                )
+                            );
+                        }
+                    }
+                }
+            ),
+            count($this->imageConstraints) > 0 ? new Constraint\Image(array_merge($this->fileConstraints, $this->imageConstraints)) : new Constraint\File($this->fileConstraints),
+        ];
 
-    public function isValidExtension(string $ext): bool
-    {
-        return count($this->extensions) == 0 || in_array($ext, $this->extensions);
-    }
-
-    public function isValidMimeType(string $ext): bool
-    {
-        if (!isset($this->fileConstraints['mimeTypes']) || !is_array($this->fileConstraints['mimeTypes'])) {
-            return true;
-        }
-
-        return count($this->fileConstraints['mimeTypes']) == 0 || in_array($ext, $this->fileConstraints['mimeTypes']);
-    }
-
-    /**
-     * @return array|string[]
-     */
-    public function getFileConstraints(): array
-    {
-        return $this->fileConstraints;
+        return $constraints;
     }
 
     /**
-     * @return array|string[]
+     * Validates provided extension.
      */
-    public function getImageConstraints(): array
+    protected function isValidExtension(string $ext): bool
     {
-        return $this->imageConstraints;
+        return 0 == count($this->extensions) || in_array($ext, $this->extensions);
     }
 }

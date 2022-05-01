@@ -2,113 +2,101 @@
 
 declare(strict_types=1);
 
-namespace Talav\MediaBundle\Thumbnail;
+namespace Talav\Component\Media\Thumbnail;
 
 use League\Glide\Server;
 use Talav\Component\Media\Exception\FilesystemException;
 use Talav\Component\Media\Model\MediaInterface;
 use Talav\Component\Media\Provider\MediaProviderInterface;
-use Talav\Component\Media\Provider\ProviderPool;
-use Talav\Component\Resource\Error\ErrorHandlerTrait;
 
 final class GlideServer implements ThumbnailInterface
 {
-    use ErrorHandlerTrait;
+    protected Server $server;
 
-    /**
-     * @var Server
-     */
-    protected $server;
+    protected string $tempDir;
 
-    /**
-     * @var ProviderPool
-     */
-    protected $pool;
-
-    public function generate(MediaProviderInterface $provider, MediaInterface $media): void
+    public function __construct(Server $server, string $tempDir)
     {
-        $tmp = $this->getTemporaryFile();
-        $imageData = $this->getImageData($media);
-        $this->disableErrorHandler();
-        if (file_put_contents($tmp, $imageData) === false) {
-            $this->restoreErrorHandler();
-            throw new FilesystemException('Unable to write temporary file');
-        }
-        $this->restoreErrorHandler();
+        $this->server = $server;
+        $this->server->setCacheWithFileExtensions(true);
+        $this->tempDir = rtrim($tempDir, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+    }
 
+    public function generate(MediaProviderInterface $provider, MediaInterface $media): iterable
+    {
+        $server = $this->configServer($provider, $media);
+        $sizes = [];
         try {
-            $filesystem = $this->pool->getProvider($media)->getFilesystem();
-            $this->server->setSource($filesystem);
-            $this->server->setCache($filesystem);
-//            foreach ($this->pool->getContext($media)->) {
-//
-//            }
-//            $this->server->getApi()->run($tmp, ['p' => ]);
-//            $this->server->getCache()->put($filename, $this->doGenerateImage($media, $tmp, $parameterBag));
+            foreach ($provider->getFormats() as $formatName => $options) {
+                $options = $this->enforceExtension($options, $media);
+                $path = $server->makeImage($provider->getFilesystemReference($media), $options);
+                $sizes[$formatName] = $this->extractSizes($path);
+            }
         } catch (\Exception $e) {
             throw new FilesystemException('Could not generate image', 0, $e);
-        } finally {
-            if (file_exists($tmp)) {
-                if (!@unlink($tmp)) {
-                    throw new FilesystemException('Unable to clean up temporary file');
+        }
+
+        return $sizes;
+    }
+
+    public function delete(MediaProviderInterface $provider, MediaInterface $media): void
+    {
+        $server = $this->configServer($provider, $media);
+
+        try {
+            foreach ($provider->getFormats() as $options) {
+                $options = $this->enforceExtension($options, $media);
+                $reference = $provider->getFilesystemReference($media);
+                if ($server->cacheFileExists($reference, $options)) {
+                    $server->getCache()->delete($server->getCachePath($reference, $options));
                 }
             }
+        } catch (\Exception $e) {
+            throw new FilesystemException('Could not delete image', 0, $e);
         }
-
-//        $referenceFile = $provider->getFilesystemReference($media);
-//
-//        if (!$referenceFile->exists()) {
-//            return;
-//        }
-//
-//        foreach ($provider->getFormats() as $format => $settings) {
-//            if (substr($format, 0, \strlen($media->getContext())) === $media->getContext() ||
-//                MediaProviderInterface::FORMAT_ADMIN === $format) {
-//                $resizer = (isset($settings['resizer']) && ($settings['resizer'])) ?
-//                    $this->getResizer($settings['resizer']) :
-//                    $provider->getResizer();
-//                $resizer->resize(
-//                    $media,
-//                    $referenceFile,
-//                    $provider->getFilesystem()->get($provider->generatePrivateUrl($media, $format), true),
-//                    $this->getExtension($media),
-//                    $settings
-//                );
-//            }
-//        }
     }
 
-    protected function getImageData(MediaInterface $media): string
+    public function isThumbExists(MediaProviderInterface $provider, MediaInterface $media, array $options): bool
     {
-        if ($this->server->getSource()->has($media->getImage())) {
-            return $this->server->getSource()->read($media->getImage());
-        }
-        throw new FilesystemException('File not found');
+        $options = $this->enforceExtension($options, $media);
+
+        return $this->configServer($provider, $media)->cacheFileExists($provider->getFilesystemReference($media), $options);
     }
 
-    protected function getTemporaryFile(): string
+    public function getThumbPath(MediaProviderInterface $provider, MediaInterface $media, array $options): ?string
     {
-        if (empty($this->tmpPath)) {
-            $this->tmpPath = sys_get_temp_dir();
-        }
-        if (empty($this->tmpPrefix)) {
-            $this->tmpPrefix = 'media';
-        }
+        $options = $this->enforceExtension($options, $media);
 
-        $this->disableErrorHandler();
-        $tempFile = tempnam($this->tmpPath, $this->tmpPrefix);
-        $this->restoreErrorHandler();
-
-        return $tempFile;
+        return $this->configServer($provider, $media)->getCachePath($provider->getFilesystemReference($media), $options);
     }
 
-    protected function getProvider(MediaInterface $media): MediaProviderInterface
+    protected function enforceExtension(array $options, MediaInterface $media): array
     {
-        return $this->pool->getProvider($media->getProviderName());
+        $options['fm'] = $options['fm'] ?? $media->getFileInfo()->getExt();
+
+        return $options;
     }
 
-    protected function getContext(MediaInterface $media): array
+    protected function configServer(MediaProviderInterface $provider, MediaInterface $media): Server
     {
-        return $this->pool->getContext($media->getContext());
+        $filesystem = $provider->getFilesystem();
+        $this->server->setSource($filesystem);
+        $this->server->setCache($filesystem);
+        $this->server->setCachePathPrefix($provider->generatePath($media));
+        $this->server->setGroupCacheInFolders(false);
+
+        return $this->server;
+    }
+
+    protected function extractSizes(string $path): iterable
+    {
+        $tmpFile = tmpfile();
+        stream_copy_to_stream($this->server->getCache()->readStream($path), $tmpFile);
+        $imageSize = getimagesize(stream_get_meta_data($tmpFile)['uri']);
+
+        return [
+            'width' => $imageSize[0],
+            'height' => $imageSize[1],
+        ];
     }
 }

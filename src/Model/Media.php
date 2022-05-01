@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Talav\Component\Media\Model;
 
 use Symfony\Component\HttpFoundation\File\File;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Talav\Component\Resource\Model\ResourceTrait;
 use Talav\Component\Resource\Model\Timestampable;
 
@@ -14,86 +13,19 @@ class Media implements MediaInterface
     use ResourceTrait;
     use Timestampable;
 
-    /** @var string|null */
-    protected $name;
+    protected ?string $name = null;
 
-    /** @var string|null */
-    protected $description;
+    protected ?string $description = null;
 
-    /** @var string|null */
-    protected $context;
+    protected ?string $context = null;
 
-    /** @var string|null */
-    protected $providerName;
+    protected ?string $providerName = null;
 
-    /** @var string|null */
-    protected $providerReference;
+    protected ?string $providerReference = null;
 
-    /** @var int|null */
-    protected $size;
+    protected ?array $thumbsInfo = null;
 
-    /**
-     * Mime type of the new file
-     *
-     * @var string|null
-     */
-    protected $mimeType;
-
-    /**
-     * File extension
-     *
-     * @var string|null
-     */
-    protected $fileExtension;
-
-    /**
-     * File name
-     *
-     * @var string|null
-     */
-    protected $fileName;
-
-    /** @var UploadedFile|null */
-    protected $file;
-
-    /** @var string|null */
-    protected $previousProviderReference;
-
-    public function setFile(File $file): void
-    {
-        $this->file = $file;
-        $this->mimeType = $file->getMimeType();
-        $this->size = $file->getSize();
-        $this->fileExtension = $file->getExtension();
-        $this->previousProviderReference = $this->providerReference;
-        $this->providerReference = null;
-        $this->fileName = $file->getClientOriginalName();
-        $this->ensureProviderReference();
-        $this->fixName();
-    }
-
-    public function getFile(): ?UploadedFile
-    {
-        return $this->file;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function resetFile(): void
-    {
-        $this->file = null;
-    }
-
-    public function getFileName(): ?string
-    {
-        return $this->fileName;
-    }
-
-    public function setFileName(?string $fileName): void
-    {
-        $this->fileName = $fileName;
-    }
+    protected ?FileInfo $fileInfo = null;
 
     public function getName(): ?string
     {
@@ -137,6 +69,15 @@ class Media implements MediaInterface
 
     public function getProviderReference(): ?string
     {
+        // this is the name used to store the file
+        if (is_null($this->providerReference)) {
+            if ('' == $this->getFileInfo()->getExt()) {
+                $this->setProviderReference($this->generateReferenceName());
+            } else {
+                $this->setProviderReference(sprintf('%s.%s', $this->generateReferenceName(), $this->getFileInfo()->getExt()));
+            }
+        }
+
         return $this->providerReference;
     }
 
@@ -145,68 +86,28 @@ class Media implements MediaInterface
         $this->providerReference = $providerReference;
     }
 
-    public function getPreviousProviderReference(): ?string
+    public function getThumbsInfo(): array
     {
-        return $this->previousProviderReference;
+        return $this->thumbsInfo;
     }
 
-    public function setPreviousProviderReference(?string $previousProviderReference): void
+    public function setThumbsInfo(array $thumbsInfo): void
     {
-        $this->previousProviderReference = $previousProviderReference;
+        $this->thumbsInfo = $thumbsInfo;
     }
 
-    public function getSize(): ?int
+    public function setFileInfo(?FileInfo $fileInfo): void
     {
-        return $this->size;
+        $this->fileInfo = $fileInfo;
     }
 
-    public function setSize(?int $size): void
+    public function getFileInfo(): ?FileInfo
     {
-        $this->size = $size;
-    }
-
-    public function getMimeType(): ?string
-    {
-        return $this->mimeType;
-    }
-
-    public function setMimeType(?string $mimeType): void
-    {
-        $this->mimeType = $mimeType;
-    }
-
-    public function getFileExtension(): ?string
-    {
-        return $this->fileExtension;
-    }
-
-    public function setFileExtension(?string $fileExtension): void
-    {
-        $this->fileExtension = $fileExtension;
-    }
-
-    protected function ensureProviderReference(): void
-    {
-        // this is the name used to store the file
-        if (!$this->getProviderReference() ||
-            MediaInterface::MISSING_BINARY_REFERENCE === $this->getProviderReference()
-        ) {
-            $this->setProviderReference($this->generateReferenceName());
-        }
+        return $this->fileInfo;
     }
 
     protected function generateReferenceName(): string
     {
-        return sha1($this->getName() . uniqid() . random_int(11111, 99999));
-    }
-
-    /**
-     * Fixes media name if it's not provided
-     */
-    protected function fixName(): void
-    {
-        if (null !== $this->getFile() && null === $this->name) {
-            $this->name = $this->getFile()->getClientOriginalName();
-        }
+        return sha1($this->getName().uniqid().random_int(11111, 99999));
     }
 }

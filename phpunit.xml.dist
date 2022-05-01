@@ -12,4 +12,10 @@
         <server name="SHELL_VERBOSITY" value="-1" />
         <ini name="memory_limit" value="-1" />
     </php>
+
+    <coverage processUncoveredFiles="true">
+        <include>
+            <directory suffix=".php">./src</directory>
+        </include>
+    </coverage>
 </phpunit>
